@@ -1,0 +1,47 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>仙人チャット管理画面</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; background: #f0f0f0; }
+    h1 { font-size: 1.5rem; }
+    textarea, input { width: 100%; margin: 0.5rem 0; }
+    .logs { max-height: 300px; overflow-y: scroll; background: #fff; padding: 1rem; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>仙人チャット 管理パネル</h1>
+  <label>ルーム名: <input id="roomInput" type="text" value="default" /></label>
+  <button onclick="joinRoom()">接続</button>
+  <div class="logs" id="log"></div>  <h2>メッセージ送信</h2>
+  <textarea id="messageInput" rows="3"></textarea>
+  <button onclick="sendMessage()">送信</button>  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>  <script>
+    const socket = io('https://your-admin-server.onrender.com'); // ← Render URLに置き換え
+    let currentRoom = '';
+
+    function joinRoom() {
+      const room = document.getElementById('roomInput').value;
+      currentRoom = room;
+      socket.emit('joinRoom', room);
+      log(`[INFO] ルーム「${room}」に接続しました`);
+    }
+
+    function sendMessage() {
+      const msg = document.getElementById('messageInput').value;
+      if (!currentRoom) return alert('ルーム未接続');
+      socket.emit('chatMessage', { room: currentRoom, message: msg });
+      log(`[SEND] ${msg}`);
+    }
+
+    socket.on('chatMessage', (data) => {
+      log(`[RECV] ${data.sender}: ${data.message}`);
+    });
+
+    function log(text) {
+      const el = document.getElementById('log');
+      el.innerHTML += `<div>${text}</div>`;
+      el.scrollTop = el.scrollHeight;
+    }
+  </script></body>
+</html>
